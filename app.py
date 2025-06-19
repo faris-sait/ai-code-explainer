@@ -27,9 +27,16 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
-        'Get Help': 'https://github.com/your-repo',
-        'Report a bug': "https://github.com/your-repo/issues",
-        'About': "# AI Code Explainer\nIntelligent code analysis powered by AI"
+        'Get Help': 'https://github.com/ai-code-explainer',
+        'Report a bug': "https://github.com/ai-code-explainer/issues",
+         'About': (
+            "**AI Code Explainer by Faris Sait**\n"
+            "Intelligent code analysis powered by AI.\n\n"
+            "Made with Streamlit v1.46.0\n"
+            "https://streamlit.io\n\n"
+            "© 2025 Faris Sait. All rights reserved."
+        )
+
     }
 )
 
