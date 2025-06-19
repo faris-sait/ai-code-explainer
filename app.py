@@ -30,7 +30,7 @@ st.set_page_config(
         'Get Help': 'https://github.com/ai-code-explainer',
         'Report a bug': "https://github.com/ai-code-explainer/issues",
         'About': (
-            "**AI CODE EXPLAINER**\n\n"
+            "# AI CODE EXPLAINER\n\n"
             "Intelligent code analysis – powered by AI – Created by Faris Sait\n\n"
             "© 2025 Thayofa Tech Media. All rights reserved."
         )
