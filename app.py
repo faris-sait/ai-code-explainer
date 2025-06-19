@@ -16,8 +16,7 @@ import json
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Hardcoded Gemini API Key
-# (Replace with your actual API key)
+
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 
@@ -300,8 +299,7 @@ def main():
     <div style="text-align: center; padding: 2rem 0;">
         <h1 style="color: #2563eb; font-size: 3rem; margin-bottom: 0.5rem;">🧠 DevGenie</h1>
         <p style="font-size: 1.2rem; color: #64748b; max-width: 800px; margin: 0 auto;">
-            Intelligent code analysis, explanation, and optimization powered by Google Gemini Flash 2.5 AI. 
-            Support for multiple programming languages with real-time analysis capabilities.
+            A Genie for Developers who wish to debug, fix, and understand their code with support for multiple programming languages with real-time analysis capabilities.
         </p>
     </div>
     """, unsafe_allow_html=True)
