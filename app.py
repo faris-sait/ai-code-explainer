@@ -31,8 +31,8 @@ st.set_page_config(
         'Report a bug': "https://github.com/ai-code-explainer/issues",
          'About': (
             "**AI Code Explainer by Faris Sait**\n"
-            "Intelligent code analysis powered by AI.\n\n"
-            "© 2025 THAYOFA TECH MEDIA. All rights reserved."
+            "Intelligent code analysis powered by AI.\n"
+            
         )
 
     }
