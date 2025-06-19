@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Hardcoded Gemini API Key
 # (Replace with your actual API key)
-GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 
 # Page configuration
