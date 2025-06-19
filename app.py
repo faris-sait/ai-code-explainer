@@ -23,16 +23,15 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 # Page configuration
 st.set_page_config(
     page_title="🧠 DevGenie",
-    page_icon="🧠",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
         'Get Help': 'https://github.com/ai-code-explainer',
         'Report a bug': "https://github.com/ai-code-explainer/issues",
-         'About': (
-            "**AI Code Explainer by Faris Sait**\n"
-            "Intelligent code analysis powered by AI.\n"
-            
+        'About': (
+            "**AI CODE EXPLAINER**\n\n"
+            "Intelligent code analysis – powered by AI – Created by Faris Sait"
         )
 
     }
