@@ -32,9 +32,7 @@ st.set_page_config(
          'About': (
             "**AI Code Explainer by Faris Sait**\n"
             "Intelligent code analysis powered by AI.\n\n"
-            "Made with Streamlit v1.46.0\n"
-            "https://streamlit.io\n\n"
-            "© 2025 Faris Sait. All rights reserved."
+            "© 2025 THAYOFA TECH MEDIA. All rights reserved."
         )
 
     }
