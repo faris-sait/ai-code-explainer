@@ -27,8 +27,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
-        'Get Help': 'https://github.com/ai-code-explainer',
-        'Report a bug': "https://github.com/ai-code-explainer/issues",
+        'Get Help': 'https://github.com/faris-sait/ai-code-explainer',
+        'Report a bug': "https://github.com/faris-sait/ai-code-explainer/issues",
         'About': (
             "# AI CODE EXPLAINER\n\n"
             "Intelligent code analysis – powered by AI – Created by Faris Sait\n\n"
