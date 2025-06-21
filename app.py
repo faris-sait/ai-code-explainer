@@ -16,9 +16,7 @@ import json
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-
 
 # Page configuration
 st.set_page_config(
@@ -159,25 +157,225 @@ class CodeAnalyzer:
             st.error(f"Gemini initialization failed: {e}")
             return False
 
-    def detect_language(self, code: str) -> str:
-        """Detect programming language from code"""
-        try:
-            lexer = guess_lexer(code)
-            language_map = {
-                'python': 'python',
-                'javascript': 'javascript',
-                'c++': 'cpp',
+    def detect_language(self, code: str, filename: str = None) -> str:
+        """Detect programming language from code with improved mapping"""
+
+        # First, try filename-based detection if available
+        if filename:
+            file_ext = filename.lower().split('.')[-1] if '.' in filename else ''
+            ext_map = {
+                'py': 'python',
+                'js': 'javascript',
+                'jsx': 'javascript',
+                'ts': 'javascript',
+                'tsx': 'javascript',
+                'cpp': 'cpp',
+                'cxx': 'cpp',
+                'cc': 'cpp',
+                'c': 'cpp',
+                'h': 'cpp',
+                'hpp': 'cpp',
                 'java': 'java',
                 'html': 'html',
+                'htm': 'html',
                 'css': 'css',
+                'scss': 'css',
+                'sass': 'css',
+                'less': 'css',
                 'php': 'php',
-
+                'php3': 'php',
+                'php4': 'php',
+                'php5': 'php'
             }
-            detected = lexer.name.lower()
-            return language_map.get(detected, detected)
+            if file_ext in ext_map:
+                logger.info(f"Language detected: {ext_map[file_ext]} (from filename: {filename})")
+                return ext_map[file_ext]
+
+        try:
+            lexer = guess_lexer(code)
+
+            # More comprehensive language mapping based on lexer names and aliases
+            # This handles the complex lexer names that Pygments returns
+            language_map = {
+                # Python variations
+                'python': 'python',
+                'python3': 'python',
+                'py': 'python',
+                'py3': 'python',
+                'sage': 'python',
+                'python3traceback': 'python',
+                'pytb': 'python',
+                'py3tb': 'python',
+
+                # JavaScript variations
+                'javascript': 'javascript',
+                'js': 'javascript',
+                'jsx': 'javascript',
+                'node': 'javascript',
+                'javascript+genshi': 'javascript',
+                'js+genshi': 'javascript',
+                'genshi': 'javascript',  # Common misidentification
+
+                # C++ variations
+                'c++': 'cpp',
+                'cpp': 'cpp',
+                'cxx': 'cpp',
+                'cc': 'cpp',
+                'c': 'cpp',
+                'arduino': 'cpp',
+                'cuda': 'cpp',
+
+                # Java variations
+                'java': 'java',
+
+                # HTML variations
+                'html': 'html',
+                'htm': 'html',
+                'html+genshi': 'html',
+                'html+kid': 'html',
+                'html+smarty': 'html',
+                'html+velocity': 'html',
+                'rhtml': 'html',
+                'html+django': 'html',
+                'html+jinja': 'html',
+                'htmldjango': 'html',
+
+                # CSS variations
+                'css': 'css',
+                'scss': 'css',
+                'sass': 'css',
+                'less': 'css',
+                'stylus': 'css',
+                'css+genshi': 'css',
+                'css+django': 'css',
+                'css+jinja': 'css',
+
+                # PHP variations
+                'php': 'php',
+                'php3': 'php',
+                'php4': 'php',
+                'php5': 'php',
+                'html+php': 'php',
+
+                # SQL variations (commonly misidentified)
+                'sql': 'python',  # Often SQL gets confused with Python
+                'mysql': 'python',
+                'postgresql': 'python',
+                'sqlite3': 'python',
+                'plpgsql': 'python',
+                'tsql': 'python',
+            }
+
+            # First, try to get the language from lexer name (lowercase)
+            lexer_name = lexer.name.lower()
+
+            # Check direct matches first
+            for key, value in language_map.items():
+                if key in lexer_name:
+                    logger.info(f"Language detected: {value} (from lexer name: {lexer.name})")
+                    return value
+
+            # If no direct match, try lexer aliases
+            if hasattr(lexer, 'aliases') and lexer.aliases:
+                for alias in lexer.aliases:
+                    alias_lower = alias.lower()
+                    if alias_lower in language_map:
+                        logger.info(f"Language detected: {language_map[alias_lower]} (from lexer alias: {alias})")
+                        return language_map[alias_lower]
+
+            # Fallback: analyze code content for better detection
+            detected_lang = self.analyze_code_content(code)
+            if detected_lang:
+                logger.info(f"Language detected: {detected_lang} (from content analysis)")
+                return detected_lang
+
+            # If still no match, return the original lexer name or default
+            logger.warning(f"Unknown lexer detected: {lexer.name}, defaulting to python")
+            return "python"
+
         except ClassNotFound:
+            # If pygments fails, try content-based detection
+            detected_lang = self.analyze_code_content(code)
+            if detected_lang:
+                logger.info(f"Language detected: {detected_lang} (fallback content analysis)")
+                return detected_lang
+
             logger.warning("Could not detect language, defaulting to python")
             return "python"
+
+    def analyze_code_content(self, code: str) -> str:
+        """Analyze code content for language detection patterns"""
+        code_lower = code.lower().strip()
+
+        # JavaScript patterns
+        js_patterns = [
+            'function(', 'const ', 'let ', 'var ', '=>', 'console.log',
+            'document.', 'window.', '$(', 'jquery', 'react', 'angular',
+            'npm', 'node', 'express', 'async/await', '.then(', '.catch(',
+            'export ', 'import ', 'require('
+        ]
+
+        # Python patterns
+        python_patterns = [
+            'def ', 'import ', 'from ', 'print(', 'if __name__',
+            'class ', 'self.', 'elif ', '__init__', 'lambda ',
+            'range(', 'len(', 'str(', 'int(', 'float(', 'list(',
+            'dict(', 'tuple(', 'set('
+        ]
+
+        # Java patterns
+        java_patterns = [
+            'public class', 'private ', 'public ', 'static void main',
+            'system.out.println', 'string[]', 'arraylist', 'hashmap',
+            'public static', 'extends ', 'implements ', 'interface '
+        ]
+
+        # C++ patterns
+        cpp_patterns = [
+            '#include', 'std::', 'cout', 'cin', 'namespace ',
+            'using namespace', 'int main()', 'class ', 'template<',
+            '#define', '#ifndef', '#ifdef', 'vector<', 'string '
+        ]
+
+        # HTML patterns
+        html_patterns = [
+            '<!doctype', '<html', '<head>', '<body>', '<div', '<span',
+            '<p>', '<a href', '<img', '<script', '<style', '<link'
+        ]
+
+        # CSS patterns
+        css_patterns = [
+            '{', '}', 'color:', 'background:', 'font-', 'margin:',
+            'padding:', 'border:', 'width:', 'height:', '@media',
+            'display:', 'position:', 'flex', 'grid'
+        ]
+
+        # PHP patterns
+        php_patterns = [
+            '<?php', '$_', 'echo ', 'function ', 'class ', 'public function',
+            'private function', 'protected function', '$this->', 'array(',
+            'mysqli', 'pdo', 'include ', 'require '
+        ]
+
+        # Count pattern matches
+        pattern_counts = {
+            'javascript': sum(1 for pattern in js_patterns if pattern in code_lower),
+            'python': sum(1 for pattern in python_patterns if pattern in code_lower),
+            'java': sum(1 for pattern in java_patterns if pattern in code_lower),
+            'cpp': sum(1 for pattern in cpp_patterns if pattern in code_lower),
+            'html': sum(1 for pattern in html_patterns if pattern in code_lower),
+            'css': sum(1 for pattern in css_patterns if pattern in code_lower),
+            'php': sum(1 for pattern in php_patterns if pattern in code_lower)
+        }
+
+        # Return language with highest match count (minimum 2 matches required)
+        max_count = max(pattern_counts.values())
+        if max_count >= 2:
+            for lang, count in pattern_counts.items():
+                if count == max_count:
+                    return lang
+
+        return None
 
     def validate_code_input(self, code: str) -> Tuple[bool, str]:
         """Validate code input"""
@@ -414,12 +612,14 @@ def main():
 
                 st.markdown(result)
 
-                # Save to history
+                # Save to history - FIXED: Store complete code instead of truncated
                 st.session_state.analysis_history.append({
                     "timestamp": datetime.now().isoformat(),
                     "mode": analysis_mode,
                     "language": detected_lang,
-                    "code": code_input[:200] + "..." if len(code_input) > 200 else code_input,
+                    "code": code_input,  # Store complete code
+                    "code_preview": code_input[:200] + "..." if len(code_input) > 200 else code_input,
+                    # Store preview for display
                     "result": result
                 })
 
@@ -468,7 +668,12 @@ def main():
                         with col2:
                             st.metric("Lines", len(file_content.split('\n')))
                         with col3:
-                            detected_lang = st.session_state.analyzer.detect_language(file_content)
+                            # Pass filename for better detection
+                            if language == "auto":
+                                detected_lang = st.session_state.analyzer.detect_language(file_content,
+                                                                                          uploaded_file.name)
+                            else:
+                                detected_lang = language
                             st.metric("Language", detected_lang.upper())
 
                         # Show code preview
@@ -477,6 +682,13 @@ def main():
 
                         # Analysis button for file
                         if st.button(f"🚀 Analyze {uploaded_file.name}", key=f"analyze_{uploaded_file.name}"):
+                            # Pass filename to detect_language for better detection
+                            if language == "auto":
+                                detected_lang = st.session_state.analyzer.detect_language(file_content,
+                                                                                          uploaded_file.name)
+                            else:
+                                detected_lang = language
+
                             result = st.session_state.analyzer.process_code(
                                 file_content, analysis_mode, detected_lang, translation
                             )
@@ -485,13 +697,14 @@ def main():
                                 st.success("✅ Analysis complete!")
                                 st.markdown(result)
 
-                                # Save to history
+                                # Save to history - FIXED: Store complete code instead of truncated
                                 st.session_state.analysis_history.append({
                                     "timestamp": datetime.now().isoformat(),
                                     "mode": analysis_mode,
                                     "language": detected_lang,
                                     "file": uploaded_file.name,
-                                    "code": file_content[:200] + "...",
+                                    "code": file_content,  # Store complete code
+                                    "code_preview": file_content[:200] + "...",  # Store preview for display
                                     "result": result
                                 })
                             else:
@@ -522,10 +735,21 @@ def main():
             if selected_analysis is not None:
                 analysis_item = list(reversed(st.session_state.analysis_history[-10:]))[selected_analysis]
 
-                # Show code context
+                # Show code context - FIXED: Display complete code, not truncated
                 with st.expander("📋 Code Context", expanded=False):
-                    st.code(analysis_item.get('code', 'Code not available'),
-                            language=analysis_item.get('language', 'text'))
+                    # Use the complete code stored in 'code' field instead of truncated 'code_preview'
+                    complete_code = analysis_item.get('code', 'Code not available')
+                    st.code(complete_code, language=analysis_item.get('language', 'text'))
+
+                    # Show code statistics
+                    if complete_code != 'Code not available':
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Characters", len(complete_code))
+                        with col2:
+                            st.metric("Lines", len(complete_code.split('\n')))
+                        with col3:
+                            st.metric("Language", analysis_item.get('language', 'unknown').upper())
 
                 # Follow-up question input
                 followup_question = st.text_area(
@@ -535,7 +759,7 @@ def main():
                 )
 
                 if st.button("💬 Ask Question", type="primary") and followup_question.strip():
-                    # Get original code from history or snippets
+                    # Get complete original code from history
                     original_code = analysis_item.get('code', '')
 
                     result = st.session_state.analyzer.process_code(
@@ -556,7 +780,8 @@ def main():
                             "mode": "followup",
                             "language": analysis_item.get('language', 'python'),
                             "question": followup_question,
-                            "code": original_code,
+                            "code": original_code,  # Store complete code
+                            "code_preview": original_code[:200] + "..." if len(original_code) > 200 else original_code,
                             "result": result
                         })
                     else:
